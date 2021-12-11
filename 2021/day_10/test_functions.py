@@ -46,3 +46,11 @@ def test_get_autocomplete_score():
 def test_solve2():
     data = module10.read_data('test_input.txt')
     assert module10.solve2(data) == 288957
+    
+def test_opener_closer_helpers():
+    assert set(module10.get_list_of_openers()) == set(['(', '[', '{', '<']) 
+    assert set(module10.get_list_of_closers()) == set([')', ']', '}', '>'])
+    assert module10.get_matching_opener(']') == '['
+    assert module10.get_matching_closer('{') == '}'
+    assert module10.get_matching_closer('}') is None
+    assert module10.get_matching_opener('(') is None

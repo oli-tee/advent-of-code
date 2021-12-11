@@ -2,10 +2,10 @@ import numpy as np
 from collections import defaultdict
 from typing import Dict
 
-def read_data(file_name):
-    rows = [row for row in open(file_name).read().split('\n') if row != '']
+def read_data(file_name: str) -> :
+    rows = open(file_name).read().split('\n')
     
-    return np.array([[int(digit) for digit in row] for row in rows])
+    return np.array([[int(digit) for digit in row] for row in rows if row != ''])
 
 
 def solve(data):
