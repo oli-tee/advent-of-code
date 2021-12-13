@@ -26,12 +26,16 @@ def recursive_traverser(edges_dict: Dict[str, List[str]], path_so_far: List[str]
     else:
         possible_paths = []
         neighbours = edges_dict[path_so_far[-1]]
-        valid_neighbours = [node for node in neighbours if (node.upper() == node) or (node not in path_so_far)]
+        valid_neighbours = [node for node in neighbours if is_valid_next_node_1(node, path_so_far)]
         for node in valid_neighbours:
             possible_paths += recursive_traverser(edges_dict, path_so_far + [node])
        
     return possible_paths
-                
+
+def is_valid_next_node_1(node, path_so_far):
+    "a node is valid as next node if it is a large cave (upper case) or if it has not been visited before"
+    return (node.upper() == node) or (node not in path_so_far)
+
 def solve2(data):
     edges_dict = parse_input(data)
     paths = recursive_traverser_2(edges_dict, ['start'])
