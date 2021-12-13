@@ -9,6 +9,10 @@ def test_solve1():
 def test_solve2():
     data = module12.read_data('test_input.txt')
     assert module12.solve2(data) == 103
+
+def test_solve2_fast():
+    data = module12.read_data('test_input.txt')
+    assert module12.solve2_fast(data) == 103
     
 def test_parse_input():
     input = ['a-B', 'B-c', 'a-D', 'c-D']

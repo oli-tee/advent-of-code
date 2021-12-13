@@ -37,6 +37,10 @@ def solve2(data):
     paths = recursive_traverser_2(edges_dict, ['start'])
     return len(paths)
 
+def solve2_fast(data):
+    edges_dict = parse_input(data)
+    paths = recursive_traverser_2_fast(edges_dict, ['start'])
+    return len(paths)
 
 def is_valid_path_2(path: List[str]) -> bool:
     "a path is valid if no more than one small cave is visited twice"
@@ -61,5 +65,25 @@ def recursive_traverser_2(edges_dict: Dict[str, List[str]], path_so_far: List[st
         for node in neighbours:
             if is_valid_path_2(path_so_far + [node]):
                 possible_paths += recursive_traverser_2(edges_dict, path_so_far + [node])
+              
+    return possible_paths
+
+
+def recursive_traverser_2_fast(edges_dict: Dict[str, List[str]], path_so_far: List[str]) -> List[List[str]]:
+    if path_so_far[-1] == 'end':
+        possible_paths = [path_so_far]
+    else:
+        possible_paths = []
+        neighbours = edges_dict[path_so_far[-1]]
+        for node in neighbours:
+            if (node.upper() == node) or (node not in path_so_far) or (path_so_far[0] != 'duplicate_used'  and node not in ['start', 'end']):
+                if node in path_so_far and node.lower() == node:
+                    possible_paths += recursive_traverser_2_fast(edges_dict, ['duplicate_used'] + path_so_far + [node])
+                else:
+                    
+                    possible_paths += recursive_traverser_2_fast(edges_dict, path_so_far + [node])
+                    
+                
+                
               
     return possible_paths
