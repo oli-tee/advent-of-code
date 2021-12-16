@@ -21,17 +21,17 @@ def get_ltid():
     
 def test_extract_packet_starting():
     #literal
-    assert module16.extract_first_packet_and_sum_versions('110100101111111000101000222')[0] == '110100101111111000101'
+    assert module16.parse_first_packet('110100101111111000101000222')['packet'] == '110100101111111000101'
     
     # container by length
     cont_pack = '00111000000000000110111101000101001010010001001000000000XXZZ'
     expected_result = '0011100000000000011011110100010100101001000100100'
-    module16.extract_first_packet_and_sum_versions(cont_pack, True)[0] == expected_result
+    module16.parse_first_packet(cont_pack, True)['packet'] == expected_result
     
     # container by count
     cont_pack = '11101110000000001101010000001100100000100011000001100000'
     expected_result = '111011100000000011010100000011001000001000110000011'
-    module16.extract_first_packet_and_sum_versions(cont_pack, True)[0] == expected_result
+    module16.parse_first_packet(cont_pack, True)['packet'] == expected_result
     
 def test_solve1():
     assert module16.solve1('D2FE28') == 6 
@@ -79,7 +79,7 @@ def test_values():
         ('9C0141080250320F1802104A08', 1)
     ]
     for test in tests:
-        assert module16.extract_first_packet_and_sum_versions(module16.hex_to_bin(test[0]))[2] == test[1]
+        assert module16.parse_first_packet(module16.hex_to_bin(test[0]))['value'] == test[1]
     
     """
     C200B40A82 finds the sum of 1 and 2, resulting in the value 3.
