@@ -1,6 +1,6 @@
 from typing import List 
 import numpy as np
-
+import json
 
 # We use 3 types of representations for snailfish numbers:
 # - sf_string, e.g. '[1,[2, 3]]'
@@ -10,7 +10,6 @@ import numpy as np
 
 def read_data(file_name):
     rows = open(file_name, 'r'). read().split('\n')
-    #rows = [eval(row) for row in rows if row != '']
     rows = [list(row) for row in rows if row != '']
     return rows
     
@@ -113,7 +112,7 @@ def get_magnitude(sf_list: List) -> int:
         return total_magnitude
 
 def get_magnitude_from_itemized(sf_itemized: List) -> int:
-    return get_magnitude(eval(''.join(sf_itemized)))
+    return get_magnitude(json.loads(''.join(sf_itemized)))
 
 def solve1(list_of_itemized_lists: List[List]) -> int:
     result_as_snailfish_nr_string = add_list_of_nr(list_of_itemized_lists)
