@@ -4,6 +4,107 @@ from typing import Dict, List, Tuple
 import numpy as np
 from collections import defaultdict
 
+
+def read_data(file_name):
+    return [parse_line(row) for row in open(file_name).read().split('\n') if row != '']
+    
+
+def parse_line(s: str):
+    pattern = "(on|off) x=([-\d]*)\.\.([-\d]*),y=([-\d]*)\.\.([-\d]*),z=([-\d]*)\.\.([-\d]*)"
+    numbers = [int(x) for x in re.match(pattern, s).groups()[1:]]
+    
+    requested_status = re.match(pattern, s).groups()[0]
+    
+    value_mapping = {'on': 1, 'off': 0}
+    
+    return {
+        'target_value': value_mapping[requested_status],
+        'cubes': (
+            Cube((
+                (numbers[0], numbers[1]),
+                (numbers[2], numbers[3]),
+                (numbers[4], numbers[5])
+            ))
+        )
+    }
+
+
+def solve1(data):
+    valid_data = [row for row in data if row['cubes'].is_valid()]
+    cubes_on = merge_all(valid_data)
+    return get_total_volume(cubes_on)
+
+
+def solve2(data):
+    cubes_on = merge_all(data)
+    return get_total_volume(cubes_on)
+
+
+
+def merge_all(data, fuse=100000):
+    items_to_merge = data           
+                                         
+    cubes_on = []    
+
+    
+    while len(items_to_merge) > 0 and fuse > 0:
+
+        fuse -= 1
+
+        new_item = items_to_merge[0]
+
+        if new_item['target_value'] == 1:
+            intersecting_cubes = new_item['cubes'].find_intersecting_cubes(cubes_on)
+            if len(intersecting_cubes) == 0:
+                cubes_on.append(new_item['cubes'])
+
+                items_to_merge = items_to_merge[1:]
+
+            else:
+
+                cube_2 = intersecting_cubes[0]
+                inter = new_item['cubes'].intersect_and_split(cube_2)
+                cubes_to_queue = inter['self_only']
+                items_to_merge = [{'target_value': 1, 'cubes': x} for x in cubes_to_queue] + items_to_merge[1:]
+
+        elif new_item['target_value'] == 0:
+            sub_cubes_to_add = []
+            i = 0
+            while i < len(cubes_on):
+                inter = new_item['cubes'].intersect_and_split(cubes_on[i])
+                if len(inter['intersection']) > 0:
+                    cubes_on.pop(i)
+                    sub_cubes_to_add += inter['other_only']
+                else:
+                    i += 1
+            cubes_on += sub_cubes_to_add
+            items_to_merge = items_to_merge[1:]
+
+        else:
+            raise ValueError
+
+    if fuse == 0:
+        raise ValueError
+        
+    return cubes_on
+
+
+def create_subranges(range1, range2):
+    splits = sorted(list(set([range1[0], range1[1]+1, range2[0], range2[1]+1])))
+    subranges = [(splits[i], splits[i+1]-1) for i in range(len(splits)-1)]
+    
+    return subranges
+
+
+def do_ranges_intersect(range1: Tuple, range2: Tuple) -> bool:
+    
+    return range1[0] <= range2[1] and range1[1] >= range2[0]
+
+
+def get_total_volume(cubes):
+    return sum([cube.get_volume() for cube in cubes])
+
+
 class Cube():
     def __init__(self, ranges):
         self.xlim = ranges[0]
@@ -100,137 +201,4 @@ class Cube():
             (self.ylim[1] - self.ylim[0] + 1) *
             (self.zlim[1] - self.zlim[0] + 1)
         )
-        
-def create_subranges(range1, range2):
-    splits = sorted(list(set([range1[0], range1[1]+1, range2[0], range2[1]+1])))
-    subranges = [(splits[i], splits[i+1]-1) for i in range(len(splits)-1)]
-    
-    return subranges
 
-
-def read_data(file_name):
-    return [parse_line(row) for row in open(file_name).read().split('\n') if row != '']
-    
-
-def parse_line(s: str):
-    pattern = "(on|off) x=([-\d]*)\.\.([-\d]*),y=([-\d]*)\.\.([-\d]*),z=([-\d]*)\.\.([-\d]*)"
-    numbers = [int(x) for x in re.match(pattern, s).groups()[1:]]
-    
-    requested_status = re.match(pattern, s).groups()[0]
-    
-    value_mapping = {'on': 1, 'off': 0}
-    
-    return {
-        'target_value': value_mapping[requested_status],
-        'coord_range': (
-            Cube((
-                (numbers[0], numbers[1]),
-                (numbers[2], numbers[3]),
-                (numbers[4], numbers[5])
-            ))
-        )
-    }
-
-
-
-            
-
-
-def update_matrix(list_of_on_cubes: Dict, coord_range, value, max_abs_value=np.inf):
-    for x in range(apply_threshold(coord_range[0][0]), apply_threshold(coord_range[0][1]) + 1):
-        for y in range(apply_threshold(coord_range[1][0]), apply_threshold(coord_range[1][1]) + 1):
-            for z in range(apply_threshold(coord_range[2][0]), apply_threshold(coord_range[2][1]) + 1):
-                cube = (x, y, z)
-
-                if value == 0 and cube in list_of_on_cubes:
-                    list_of_on_cubes.remove(cube)  
-                elif value == 1 and cube not in list_of_on_cubes:
-                    if abs(x) <= max_abs_value and abs(y) <= max_abs_value and abs(z) <= max_abs_value:
-                        list_of_on_cubes.append(cube)
-                
-    
-    return list_of_on_cubes
-
-
-def update_matrix_v2(list_of_on_cubes: List[Tuple[Tuple[int]]], coord_range, value, max_abs_value=np.inf):
-    for cube in list_of_on_cubes:
-        pass
-    
-    
-
-
-
-def do_ranges_intersect(range1: Tuple, range2: Tuple) -> bool:
-    
-    return range1[0] <= range2[1] and range1[1] >= range2[0]
-
-
-
-
-def apply_threshold(coord, max_abs_value=50):
-    return min(max(-max_abs_value, coord), max_abs_value)
-    
-    
-def solve1(data):
-    return None
-    list_of_on_cubes = []
-    for row in data:
-        list_of_on_cubes = update_matrix(list_of_on_cubes, row['coord_range'], row['target_value'])
-    
-    return len(list_of_on_cubes)
-        
-
-def merge_all(data, fuse=100000):
-    items_to_merge = data           
-                                         
-    cubes_on = []    
-
-    
-    while len(items_to_merge) > 0 and fuse > 0:
-
-        fuse -= 1
-
-        new_item = items_to_merge[0]
-
-        if new_item['target_value'] == 1:
-            intersecting_cubes = new_item['coord_range'].find_intersecting_cubes(cubes_on)
-            if len(intersecting_cubes) == 0:
-                cubes_on.append(new_item['coord_range'])
-                #print(f">> Adding to cubes_on: {new_item['coord_range']}")
-                items_to_merge = items_to_merge[1:]
-
-            else:
-
-                cube_2 = intersecting_cubes[0]
-                inter = new_item['coord_range'].intersect_and_split(cube_2)
-                cubes_to_queue = inter['self_only']
-                items_to_merge = [{'target_value': 1, 'coord_range': x} for x in cubes_to_queue] + items_to_merge[1:]
-
-        elif new_item['target_value'] == 0:
-            sub_cubes_to_add = []
-            i = 0
-            while i < len(cubes_on):
-                inter = new_item['coord_range'].intersect_and_split(cubes_on[i])
-                if len(inter['intersection']) > 0:
-                    cubes_on.pop(i)
-                    sub_cubes_to_add += inter['other_only']
-                else:
-                    i += 1
-            cubes_on += sub_cubes_to_add
-            items_to_merge = items_to_merge[1:]
-
-        else:
-            raise ValueError
-
-    if fuse == 0:
-        raise ValueError
-        
-    return cubes_on
-
-def solve1(data):
-    cubes_on = merge_all(data)
-    return get_total_volume(cubes_on)
-
-
-def get_total_volume(cubes):
-    return sum([cube.get_volume() for cube in cubes])
